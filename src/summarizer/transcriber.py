@@ -1,3 +1,4 @@
+import gc
 import torch
 from pathlib import Path
 from faster_whisper import WhisperModel
@@ -43,7 +44,7 @@ def transcribe_audio(audio_path: str, model_size: str = "large-v3-turbo") -> str
     print(f"Using device: {check_cuda()}")
     _model = WhisperModel(model_size, device=device, compute_type="float16" if device == "cuda" else "int8")
     segments, _ = _model.transcribe(audio_path, log_progress=True)
-    return " ".join([seg.text for seg in segments])
+    return "\n".join([f"[{seg.start:.2f}s - {seg.end:.2f}s] {seg.text}" for seg in segments])
 
 
 def unload_model() -> None:
@@ -51,6 +52,5 @@ def unload_model() -> None:
     global _model
     if _model is not None:
         del _model
+        gc.collect()
         _model = None
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
