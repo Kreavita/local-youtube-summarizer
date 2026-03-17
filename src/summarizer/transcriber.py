@@ -36,7 +36,7 @@ def save_transcript(video_id: str, transcript: str) -> None:
     cache_path.write_text(transcript, encoding="utf-8")
 
 
-def transcribe_audio(audio_path: str, model_size: str = "base") -> str:
+def transcribe_audio(audio_path: str, model_size: str = "large-v3-turbo") -> str:
     """Transcribe audio file using Faster Whisper."""
     global _model
     device = "cuda" if torch.cuda.is_available() else "cpu"

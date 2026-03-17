@@ -12,7 +12,7 @@ def main():
     parser.add_argument("url", help="YouTube video URL")
     parser.add_argument("--prompt", "-p", default=SUMMARY_PROMPT, help="Summary prompt")
     parser.add_argument("--model", "-m", default=OLLAMA_MODEL, help="Ollama model")
-    parser.add_argument("--whisper-model", default=WHISPER_MODEL, help="Whisper model size")
+    parser.add_argument("--whisper-model", default=WHISPER_MODEL, help="Whisper model size (tiny, base, small, medium, large-v3-turbo, large-v3, turbo)")
     parser.add_argument("--output", "-o", help="Output file for summary")
     parser.add_argument("--keep-audio", action="store_true", help="Keep downloaded audio file after processing")
     parser.add_argument("--no-cache", action="store_true", help="Disable transcript caching")
