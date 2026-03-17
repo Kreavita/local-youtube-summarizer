@@ -20,8 +20,9 @@ def main():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         print("Downloading audio...")
-        audio_path = downloader.download_audio(args.url, temp_dir)
+        audio_path, metadata = downloader.download_audio(args.url, temp_dir)
         print(f"Audio downloaded: {audio_path}")
+        print(f"Video: {metadata.get('title', 'N/A')} by {metadata.get('channel', 'N/A')}")
 
         print("Transcribing with Whisper...")
         transcript = transcriber.transcribe_audio(audio_path, args.whisper_model)
@@ -32,7 +33,7 @@ def main():
             print("Audio file removed.")
 
         print("Generating summary with Ollama...")
-        summary = summarizer.summarize_text(transcript, args.prompt, args.model)
+        summary = summarizer.summarize_text(transcript, args.prompt, args.model, metadata)
         
         if args.output:
             with open(args.output, "w") as f:
