@@ -36,8 +36,6 @@ def main():
 
             print("Transcribing with Whisper...")
             transcript = transcriber.transcribe_audio(audio_path, args.whisper_model)
-            transcriber.unload_model()
-            print("Whisper model unloaded from VRAM.")
             
             if not args.no_cache:
                 transcriber.save_transcript(metadata['id'], transcript)

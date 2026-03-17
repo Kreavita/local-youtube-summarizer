@@ -57,17 +57,23 @@ def transcribe_audio(audio_path: str, model_size: str = "large-v3-turbo") -> str
         audio_path
     ]
 
-    subprocess.run(cmd, check=True, cwd=Path(__file__).parent)
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=Path(__file__).parent)
+    if result.returncode != 0:
+        if device == "cuda":
+            print("CUDA subprocess failed, retrying with CPU...", flush=True)
+            cmd[cmd.index("cuda")] = "cpu"
+            cmd[cmd.index("float16")] = "int8"
+            result = subprocess.run(cmd, capture_output=True, text=True, cwd=Path(__file__).parent)
+            if result.returncode != 0:
+                print(f"STDERR: {result.stderr}", flush=True)
+                raise RuntimeError(f"Transcription failed: {result.stderr}")
+        else:
+            print(f"STDERR: {result.stderr}", flush=True)
+            raise RuntimeError(f"Transcription failed: {result.stderr}")
 
     with open(tmp_path, encoding="utf-8") as f:
         result = f.read()
 
     Path(tmp_path).unlink()
 
-    print("Whisper model unloaded from VRAM", flush=True)
     return result
-
-
-def unload_model() -> None:
-    """Unload Whisper model from memory/VRAM."""
-    pass
