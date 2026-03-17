@@ -7,16 +7,12 @@ def download_audio(url: str, output_path: str = ".") -> str:
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': os.path.join(output_path, '%(id)s.%(ext)s'),
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         video_id = info['id']
-        audio_file = os.path.join(output_path, f"{video_id}.mp3")
+        ext = info.get('ext', 'm4a')
+        audio_file = os.path.join(output_path, f"{video_id}.{ext}")
     
     return audio_file
