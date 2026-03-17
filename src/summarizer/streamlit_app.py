@@ -68,19 +68,28 @@ def run_ui():
                     transcript = transcriber.load_cached_transcript(metadata['id'])
 
                     if transcript:
-                        st.success(f"Using cached transcript (length: {len(transcript)})")
+                        st.info(f"📄 Using cached transcript (length: {len(transcript)} chars)")
                     else:
-                        with st.status("Downloading audio..."):
+                        with st.status("Downloading audio...", expanded=True) as status:
+                            progress_bar = st.progress(50, text="Downloading...")
                             audio_path, metadata = downloader.download_audio(url, temp_dir)
-                        
-                        with st.status("Transcribing with Whisper..."):
-                            transcript = transcriber.transcribe_audio(audio_path, whisper_model)
-                            transcriber.save_transcript(metadata['id'], transcript)
-                        
-                        st.success("Transcription complete!")
+                            progress_bar.progress(100, text="Download complete")
+                            status.update(label="Audio downloaded", state="complete")
 
-                    with st.status("Generating summary with Ollama..."):
+                        with st.status("Transcribing with Whisper...", expanded=True) as status:
+                            progress_bar = st.progress(0, text="Loading model...")
+                            transcript, progress_gen = transcriber.transcribe_audio_progress(audio_path, whisper_model)
+                            for p in progress_gen:
+                                progress_bar.progress(p["progress"], text=p["text"])
+                            with open(transcriber.get_cache_path(metadata['id']), encoding="utf-8") as f:
+                                transcript = f.read()
+                            status.update(label=f"Transcription complete ({len(transcript)} chars)", state="complete")
+
+                    with st.status("Generating summary with Ollama...", expanded=True) as status:
+                        progress_bar = st.progress(0.0, text="Generating summary...")
                         summary = summarizer.summarize_text(transcript, prompt, ollama_model, metadata)
+                        progress_bar.progress(1.0, text="Complete")
+                        status.update(label="Summary generated", state="complete")
 
                     st.subheader("Summary")
                     st.write(summary)
