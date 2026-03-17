@@ -1,10 +1,8 @@
-import gc
+import subprocess
+import sys
+import tempfile
 import torch
 from pathlib import Path
-from faster_whisper import WhisperModel
-
-
-_model = None
 
 
 def check_cuda() -> str:
@@ -38,19 +36,38 @@ def save_transcript(video_id: str, transcript: str) -> None:
 
 
 def transcribe_audio(audio_path: str, model_size: str = "large-v3-turbo") -> str:
-    """Transcribe audio file using Faster Whisper."""
-    global _model
+    """Transcribe audio file using Faster Whisper via subprocess."""
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {check_cuda()}")
-    _model = WhisperModel(model_size, device=device, compute_type="float16" if device == "cuda" else "int8")
-    segments, _ = _model.transcribe(audio_path, log_progress=True)
-    return "\n".join([f"[{seg.start:.2f}s - {seg.end:.2f}s] {seg.text}" for seg in segments])
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as tmp:
+        tmp_path = tmp.name
+
+    compute_type = "float16" if device == "cuda" else "int8"
+
+    cli_script = str(Path(__file__).parent / "_transcribe_cli.py")
+
+    cmd = [
+        sys.executable, cli_script,
+        "--model", model_size,
+        "--device", device,
+        "--compute_type", compute_type,
+        "--output_file", tmp_path,
+        "--filename_timestamps",
+        audio_path
+    ]
+
+    subprocess.run(cmd, check=True, cwd=Path(__file__).parent)
+
+    with open(tmp_path, encoding="utf-8") as f:
+        result = f.read()
+
+    Path(tmp_path).unlink()
+
+    print("Whisper model unloaded from VRAM", flush=True)
+    return result
 
 
 def unload_model() -> None:
     """Unload Whisper model from memory/VRAM."""
-    global _model
-    if _model is not None:
-        del _model
-        gc.collect()
-        _model = None
+    pass
