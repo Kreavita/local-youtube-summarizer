@@ -2,14 +2,23 @@ import argparse
 import os
 import sys
 import tempfile
+import webbrowser
+import threading
+import time
+import subprocess
 
 from . import downloader, transcriber, summarizer
 from .config import SUMMARY_PROMPT, WHISPER_MODEL, OLLAMA_MODEL
 
 
+def open_browser():
+    time.sleep(2)
+    webbrowser.open("http://localhost:12820")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Summarize YouTube videos using Whisper and Ollama")
-    parser.add_argument("url", help="YouTube video URL")
+    parser.add_argument("url", help="YouTube video URL", nargs="?")
     parser.add_argument("--prompt", "-p", default=SUMMARY_PROMPT, help="Summary prompt")
     parser.add_argument("--model", "-m", default=OLLAMA_MODEL, help="Ollama model")
     parser.add_argument("--whisper-model", default=WHISPER_MODEL, help="Whisper model size (tiny, base, small, medium, large-v3-turbo, large-v3, turbo)")
@@ -18,6 +27,17 @@ def main():
     parser.add_argument("--no-cache", action="store_true", help="Disable transcript caching")
 
     args = parser.parse_args()
+
+    if not args.url:
+        threading.Thread(target=open_browser, daemon=True).start()
+        script_path = os.path.join(os.path.dirname(__file__), "streamlit_app.py")
+        subprocess.run([
+            sys.executable, "-m", "streamlit", "run",
+            "--server.port", "12820",
+            "--server.headless", "true",
+            script_path
+        ])
+        sys.exit(0)
 
     with tempfile.TemporaryDirectory() as temp_dir:
         metadata = downloader.get_video_metadata(args.url)

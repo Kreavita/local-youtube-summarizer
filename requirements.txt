@@ -4,3 +4,4 @@ faster-whisper
 torch
 python-dotenv
 requests
+streamlit
