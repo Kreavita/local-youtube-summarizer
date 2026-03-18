@@ -32,6 +32,8 @@ def main():
     parser.add_argument("--output", "-o", help="Output file for summary")
     parser.add_argument("--keep-audio", action="store_true", help="Keep downloaded audio file after processing")
     parser.add_argument("--no-cache", action="store_true", help="Disable transcript caching")
+    parser.add_argument("--no-yt-subs", action="store_true", help="Skip YouTube transcript and use Whisper directly")
+    parser.add_argument("--no-whisper", action="store_true", help="Skip Whisper transcription")
 
     args = parser.parse_args()
 
@@ -65,7 +67,7 @@ def main():
             if transcript:
                 print(f"Using cached transcript. (length: {len(transcript)})")
         
-        if not transcript and not is_local:
+        if not transcript and not is_local and not args.no_yt_subs:
             print("Trying to fetch YouTube transcript...")
             transcript, status = transcript_fetcher.fetch_youtube_transcript(args.url)
             if transcript:
@@ -75,6 +77,9 @@ def main():
                 print(f"{YELLOW}YouTube transcript unavailable: {status}{RESET}")
         
         if not transcript:
+            if args.no_whisper:
+                print(f"{RED}Error: No transcript source available. Enable YouTube or Whisper.{RESET}")
+                sys.exit(1)
             if is_local:
                 print("Extracting audio from local file...")
                 audio_path, metadata = downloader.extract_audio_from_file(args.url, temp_dir)
