@@ -26,6 +26,7 @@ def run_ui():
             index=4,
             help="Size of Whisper model for transcription"
         )
+        include_timestamps = st.checkbox("Include timestamps", value=True, help="Include timestamps in transcript (uses more context)")
     with col2:
         ollama_model = st.text_input("Ollama Model", value=OLLAMA_MODEL)
 
@@ -68,6 +69,9 @@ def run_ui():
                     transcript = transcriber.load_cached_transcript(metadata['id'])
 
                     if transcript:
+                        if not include_timestamps:
+                            import re
+                            transcript = re.sub(r'\[\d+\.\d+s - \d+\.\d+s\] ', '', transcript)
                         st.info(f"📄 Using cached transcript (length: {len(transcript)} chars)")
                     else:
                         with st.status("Downloading audio...", expanded=True) as status:
@@ -85,6 +89,13 @@ def run_ui():
                             with open(transcriber.get_cache_path(metadata['id']), encoding="utf-8") as f:
                                 transcript = f.read()
                             status.update(label=f"Transcription complete ({len(transcript)} chars)", state="complete")
+
+                    if not include_timestamps:
+                        import re
+                        transcript_no_ts = re.sub(r'\[\d+\.\d+s - \d+\.\d+s\] ', '', transcript)
+                        if transcript_no_ts != transcript:
+                            st.info(f"📄 Timestamps removed (length: {len(transcript_no_ts)} chars)")
+                            transcript = transcript_no_ts
 
                     with st.status("Generating summary with Ollama...", expanded=True) as status:
                         progress_bar = st.progress(0.0, text="Generating summary...")
