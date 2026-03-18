@@ -5,15 +5,16 @@ Tool that downloads audio from YouTube videos using [yt-dlp](https://github.com/
 ## Features
 
 - Download audio from YouTube videos ([yt-dlp](https://github.com/yt-dlp/yt-dlp))
+- Or use local video/audio files (mp4, mkv, mov, mp3, m4a, etc.) (requires [FFmpeg](https://ffmpeg.org/) in PATH)
 - Local transcription with [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
 - Customizable summary prompts via [Ollama](https://ollama.com/)
 - Beautiful Streamlit GUI or simple CLI interface
 
 ## Requirements
 
-- Python 3.10+
-- FFmpeg (for audio processing)
-- Ollama running locally or remote
+- [Python](https://www.python.org/) 3.10+
+- [FFmpeg](https://ffmpeg.org/) (for audio processing)
+- [Ollama](https://ollama.com/) running locally or remote
 - *Optional for faster, GPU-accelerated Whisper: NVIDIA GPU with CUDA*
 
 ## Ollama Installation
@@ -121,15 +122,19 @@ http://localhost:12820 will open in your browser.
 ### CLI
 
 ```bash
-# Basic usage - summarize a YouTube video
+# Summarize a YouTube video
 summarizer "https://www.youtube.com/watch?v=VIDEO_ID"
+
+# Or use a local video/audio file
+summarizer "/path/to/video.mov"
+summarizer "/path/to/audio.m4a"
 ```
 
 ## CLI Options
 
 | Option | Description |
 |--------|-------------|
-| `url` | YouTube video URL (optional - launches web UI if omitted) |
+| `url` | YouTube video URL or local file path (optional - launches web UI if omitted) |
 | `--prompt`, `-p` | Custom summary prompt |
 | `--model`, `-m` | Ollama model name |
 | `--output`, `-o` | Output file for summary |
