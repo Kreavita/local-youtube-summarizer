@@ -16,31 +16,55 @@ Tool that downloads audio from YouTube videos using yt-dlp, transcribes using fa
 - Ollama running locally or remote
 - For GPU acceleration (recommended): NVIDIA GPU with CUDA
 
+## Ollama Installation
+
+Download and install from: https://ollama.com/download
+
+### Pull the Model
+
+The default model is `qwen3.5:4b`. Pull it with:
+
+```bash
+ollama pull qwen3.5:4b
+```
+
+To use a different model, update `OLLAMA_MODEL` in your `.env` file.
+
+### Start Ollama
+
+```bash
+ollama serve
+```
+
+Ollama runs on `http://localhost:11434` by default.
+
 ## Installation
 
 1. Clone the repository
 
 2. Run the setup script to create virtual environment and install dependencies:
 
-**Linux/macOS:**
-```bash
-./setup.sh
-```
-
-**Windows:**
-```cmd
-setup.bat
-```
-
 3. Activate the virtual environment:
 
 **Linux/macOS:**
 ```bash
+./setup.sh
+
+# Activate the virtual environment
 source venv/bin/activate
 ```
 
 **Windows:**
+
+> **Important**: Use Command Prompt (cmd), not PowerShell. If using PowerShell, you need to enable script execution:
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
+
 ```cmd
+.\setup.bat
+
+REM Activate the virtual environment
 venv\Scripts\activate
 ```
 

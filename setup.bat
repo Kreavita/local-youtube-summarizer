@@ -7,9 +7,9 @@ REM Activate virtual environment
 call venv\Scripts\activate.bat
 
 REM Upgrade pip
-pip install --upgrade pip
+python.exe -m pip install --upgrade pip
 
 REM Install package in editable mode
-pip install -e .
+python.exe -m pip install -e .
 
-echo Setup complete. Activate with: venv\Scripts\activate.bat
+echo Setup complete. Activate with: venv\Scripts\activate
