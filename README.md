@@ -1,12 +1,12 @@
 # YouTube Video Summarizer
 
-Tool that downloads audio from YouTube videos using yt-dlp, transcribes using faster-whisper, and generates summaries via Ollama API Request.
+Tool that downloads audio from YouTube videos using [yt-dlp](https://github.com/yt-dlp/yt-dlp), transcribes using [faster-whisper](https://github.com/SYSTRAN/faster-whisper), and generates summaries via [Ollama](https://ollama.com/) API Request.
 
 ## Features
 
-- Download audio from YouTube videos (yt-dlp)
-- Local transcription with OpenAI Whisper
-- Customizable summary prompts via Ollama
+- Download audio from YouTube videos ([yt-dlp](https://github.com/yt-dlp/yt-dlp))
+- Local transcription with [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
+- Customizable summary prompts via [Ollama](https://ollama.com/)
 - Beautiful Streamlit GUI or simple CLI interface
 
 ## Requirements
@@ -14,11 +14,11 @@ Tool that downloads audio from YouTube videos using yt-dlp, transcribes using fa
 - Python 3.10+
 - FFmpeg (for audio processing)
 - Ollama running locally or remote
-- For GPU acceleration (recommended): NVIDIA GPU with CUDA
+- *Optional for faster, GPU-accelerated Whisper: NVIDIA GPU with CUDA*
 
 ## Ollama Installation
 
-Download and install from: https://ollama.com/download
+Download and install from: [https://ollama.com/download](https://ollama.com/download)
 
 ### Pull the Model
 
