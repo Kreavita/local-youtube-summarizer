@@ -1,6 +1,6 @@
-# YouTube Video Summarizer
+# Local Video Summarizer
 
-Tool that downloads audio from YouTube videos using [yt-dlp](https://github.com/yt-dlp/yt-dlp), transcribes using [faster-whisper](https://github.com/SYSTRAN/faster-whisper), and generates summaries via [Ollama](https://ollama.com/) API Request.
+Tool that extracts audio from local files or downloads audio from YouTube videos using [yt-dlp](https://github.com/yt-dlp/yt-dlp), transcribes using [faster-whisper](https://github.com/SYSTRAN/faster-whisper), and generates summaries via [Ollama](https://ollama.com/) API Request.
 
 ## Features
 
