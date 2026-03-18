@@ -29,7 +29,14 @@ def run_ui():
             index=4,
             help="Size of Whisper model for transcription"
         )
+        col_transcribe1, col_transcribe2 = st.columns(2)
+        with col_transcribe1:
+            use_youtube_transcript = st.checkbox("YT Transcript", value=True, help="Try fetching YouTube transcript first")
+        with col_transcribe2:
+            use_whisper = st.checkbox("YT-DLP and Whisper", value=True, help="Download Audio and use Whisper if YouTube transcript unavailable")
+    
         include_timestamps = st.checkbox("Include timestamps", value=True, help="Include timestamps in transcript (uses more context)")
+            
     with col2:
         ollama_model = st.text_input("Ollama Model", value=OLLAMA_MODEL)
 
@@ -43,6 +50,7 @@ def run_ui():
             value=context_values[default_idx],
             format_func=lambda x: context_labels[context_values.index(x)]
         )
+        
     
     prompt = st.text_area("Summary Prompt", value=SUMMARY_PROMPT, height=120)
 
@@ -118,17 +126,23 @@ def run_ui():
                                 transcript = re.sub(r'\[\d+\.\d+s - \d+\.\d+s\] ', '', transcript)
                             st.info(f"📄 Using cached transcript (length: {len(transcript)} chars)")
                         else:
-                            with st.status("Fetching YouTube transcript...", expanded=True) as status:
-                                transcript, status_msg = transcript_fetcher.fetch_youtube_transcript(url)
-                                if transcript:
-                                    transcriber.save_transcript(metadata['id'], transcript)
-                                    status.update(label=f"YouTube transcript: {status_msg}", state="complete")
-                                    st.info(f"📄 Using YouTube transcript: {status_msg} (length: {len(transcript)} chars)")
-                                else:
-                                    status.update(label=f"YouTube transcript unavailable: {status_msg}", state="error")
-                                    st.warning(f"YouTube transcript unavailable: {status_msg}")
+                            youtube_tried = False
+                            whisper_tried = False
                             
-                            if not transcript:
+                            if use_youtube_transcript:
+                                with st.status("Fetching YouTube transcript...", expanded=True) as status:
+                                    transcript, status_msg = transcript_fetcher.fetch_youtube_transcript(url)
+                                    if transcript:
+                                        transcriber.save_transcript(metadata['id'], transcript)
+                                        status.update(label=f"YouTube transcript: {status_msg}", state="complete")
+                                        st.info(f"📄 Using YouTube transcript: {status_msg} (length: {len(transcript)} chars)")
+                                        youtube_tried = True
+                                    else:
+                                        status.update(label=f"YouTube transcript unavailable: {status_msg}", state="error")
+                                        st.warning(f"YouTube transcript unavailable: {status_msg}")
+                            
+                            if not transcript and use_whisper:
+                                whisper_tried = True
                                 with st.status("Downloading audio...", expanded=True) as status:
                                     progress_bar = st.progress(0, text="Starting download...")
                                     audio_path, metadata, download_progress = downloader.download_audio_progress(url, temp_dir)
@@ -144,6 +158,13 @@ def run_ui():
                                     with open(transcriber.get_cache_path(metadata['id']), encoding="utf-8") as f:
                                         transcript = f.read()
                                     status.update(label=f"Transcription complete ({len(transcript)} chars)", state="complete")
+                            
+                            if not transcript:
+                                if not youtube_tried and not whisper_tried:
+                                    st.error("No transcript source available. Enable YouTube or Whisper in settings.")
+                                else:
+                                    st.error("Could not get a transcript, exitting.")
+                                return
 
                     if not include_timestamps:
                         import re
