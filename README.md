@@ -1,13 +1,13 @@
 # YouTube Video Summarizer
 
-A CLI tool that downloads audio from YouTube videos, transcribes using Whisper, and generates summaries via Ollama.
+Tool that downloads audio from YouTube videos using yt-dlp, transcribes using faster-whisper, and generates summaries via Ollama API Request.
 
 ## Features
 
 - Download audio from YouTube videos (yt-dlp)
 - Local transcription with OpenAI Whisper
 - Customizable summary prompts via Ollama
-- Simple CLI interface
+- Beautiful Streamlit GUI or simple CLI interface
 
 ## Requirements
 
@@ -18,11 +18,7 @@ A CLI tool that downloads audio from YouTube videos, transcribes using Whisper, 
 
 ## Installation
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd summarizer
-```
+1. Clone the repository
 
 2. Run the setup script to create virtual environment and install dependencies:
 
@@ -48,12 +44,6 @@ source venv/bin/activate
 venv\Scripts\activate
 ```
 
-4. Configure your environment:
-```bash
-cp .env.example .env
-# Edit .env with your Ollama endpoint and other settings
-```
-
 ### GPU Support (Recommended)
 
 For NVIDIA GPU acceleration, install torch with CUDA support :
@@ -70,7 +60,12 @@ python check_cuda.py
 
 ## Configuration
 
-Create a `.env` file with the following variables:
+```bash
+cp .env.example .env
+# Then update your .env to your Ollama endpoint and other settings
+```
+
+Copy or create a `.env` file with the following variables:
 
 ```env
 # Ollama endpoint (default: http://localhost:11434)
@@ -104,18 +99,6 @@ http://localhost:12820 will open in your browser.
 ```bash
 # Basic usage - summarize a YouTube video
 summarizer "https://www.youtube.com/watch?v=VIDEO_ID"
-
-# Or with python -m (if in project directory)
-python -m summarizer "https://www.youtube.com/watch?v=VIDEO_ID"
-
-# Specify a custom prompt
-summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --prompt "Summarize in German:"
-
-# Use a different Ollama model
-summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --model qwen3.5:9b
-
-# Save output to file
-summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --output summary.txt
 ```
 
 ## CLI Options
@@ -131,11 +114,18 @@ summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --output summary.txt
 | `--no-cache` | Disable transcript caching |
 
 
-## Caching
+## Downloads and Caching
 
-Transcripts are cached automatically to avoid re-transcribing the same video. Cache location: `~/.cache/yt-summarizer/`
+Audio files are downloaded to a temporary directory and automatically deleted after processing unless you use `--keep-audio`.
+
+Transcripts are cached automatically to avoid re-transcribing the same video. Cache location: `~/.cache/yt_summarizer/`
 
 To disable caching:
 ```bash
 summarizer "URL" --no-cache
+```
+
+To keep the audio file:
+```bash
+summarizer "URL" --keep-audio
 ```
