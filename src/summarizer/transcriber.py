@@ -90,12 +90,15 @@ def transcribe_audio_progress(audio_path: str, model_size: str = "large-v3-turbo
 
     cli_script = str(Path(__file__).parent / "_transcribe_cli.py")
 
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as tmp:
+        tmp_path = tmp.name
+
     cmd = [
         sys.executable, cli_script,
         "--model", model_size,
         "--device", device,
         "--compute_type", compute_type,
-        "--output_file", "-",
+        "--output_file", tmp_path,
         "--filename_timestamps",
         audio_path
     ]
@@ -151,8 +154,11 @@ def transcribe_audio_progress(audio_path: str, model_size: str = "large-v3-turbo
             else:
                 raise RuntimeError("Transcription failed")
 
-        transcript = "".join(transcript_lines)
-        save_transcript(video_id, transcript)
+        with open(tmp_path, encoding="utf-8") as f:
+            result = f.read()
+
+        Path(tmp_path).unlink()
+        save_transcript(video_id, result)
         yield {"progress": 1.0, "text": "Complete"}
 
     progress_gen = run_with_progress()
