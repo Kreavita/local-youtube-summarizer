@@ -10,6 +10,11 @@ import subprocess
 from . import downloader, transcriber, summarizer
 from .config import SUMMARY_PROMPT, WHISPER_MODEL, OLLAMA_MODEL
 
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+RESET = "\033[0m"
+
 
 def open_browser():
     time.sleep(2)
@@ -51,29 +56,33 @@ def main():
         else:
             print("Downloading audio...")
             audio_path, metadata = downloader.download_audio(args.url, temp_dir)
-            print(f"Audio downloaded: {audio_path}")
-            print(f"Video: {metadata.get('title', 'N/A')} by {metadata.get('channel', 'N/A')}")
+            print(f"{GREEN}Audio downloaded: {audio_path}{RESET}")
+            print(f"{GREEN}Video: {metadata.get('title', 'N/A')} by {metadata.get('channel', 'N/A')}{RESET}")
 
             print("Transcribing with Whisper...")
             transcript = transcriber.transcribe_audio(audio_path, args.whisper_model)
             
             if not args.no_cache:
                 transcriber.save_transcript(metadata['id'], transcript)
-                print("Transcription complete and cached.")
+                print(f"{GREEN}Transcription complete and cached.{RESET}")
             else:
-                print("Transcription complete.")
+                print(f"{GREEN}Transcription complete.{RESET}")
 
             if not args.keep_audio:
                 os.remove(audio_path)
-                print("Audio file removed.")
+                print(f"Audio file removed.")
 
         print("Generating summary with Ollama...")
-        summary = summarizer.summarize_text(transcript, args.prompt, args.model, metadata)
+        try:
+            summary = summarizer.summarize_text(transcript, args.prompt, args.model, metadata)
+        except Exception as e:
+            print(f"{RED}Error: {str(e)}{RESET}")
+            sys.exit(1)
         
         if args.output:
             with open(args.output, "w", encoding="utf-8") as f:
                 f.write(summary)
-            print(f"Summary saved to: {args.output}")
+            print(f"{GREEN}Summary saved to: {args.output}{RESET}")
         else:
             print("\n--- Summary ---\n")
             print(summary)

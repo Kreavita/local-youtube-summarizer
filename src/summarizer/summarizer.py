@@ -44,7 +44,16 @@ def summarize_text(text: str, prompt: str, model: str = None, metadata: dict = N
         }
     )
 
+    if not response.ok:
+        error_data = response.json()
+        error_msg = error_data.get("error", f"HTTP {response.status_code}: {response.text}")
+        raise RuntimeError(f"Ollama error: {error_msg}")
+
     result = response.json()
+    
+    if "error" in result:
+        raise RuntimeError(f"Ollama error: {result['error']}")
+
     summary = result.get("response", "")
     
     return summary

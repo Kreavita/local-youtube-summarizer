@@ -99,9 +99,15 @@ def run_ui():
 
                     with st.status("Generating summary with Ollama...", expanded=True) as status:
                         progress_bar = st.progress(0.0, text="Generating summary...")
-                        summary = summarizer.summarize_text(transcript, prompt, ollama_model, metadata)
-                        progress_bar.progress(1.0, text="Complete")
-                        status.update(label="Summary generated", state="complete")
+                        try:
+                            summary = summarizer.summarize_text(transcript, prompt, ollama_model, metadata)
+                            progress_bar.progress(1.0, text="Complete")
+                            status.update(label="Summary generated", state="complete")
+                        except Exception as e:
+                            progress_bar.progress(1.0, text="Error")
+                            status.update(label=f"Error: {str(e)}", state="error")
+                            st.error(str(e))
+                            return
 
                     st.subheader("Summary")
                     st.write(summary)
