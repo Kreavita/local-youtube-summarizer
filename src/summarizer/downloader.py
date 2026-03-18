@@ -2,8 +2,86 @@ import yt_dlp
 import os
 import subprocess
 import re
+import hashlib
 from pathlib import Path
 from typing import Generator
+
+AUDIO_EXTENSIONS = {'.mp3', '.m4a', '.wav', '.ogg', '.flac', '.aac', '.wma', '.aiff'}
+VIDEO_EXTENSIONS = {'.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg'}
+
+
+def is_local_path(path: str) -> bool:
+    """Check if input is a local file path."""
+    if not path:
+        return False
+    p = Path(path)
+    if p.exists() and p.is_file():
+        return True
+    if p.suffix.lower() in AUDIO_EXTENSIONS | VIDEO_EXTENSIONS:
+        return True
+    return False
+
+
+def extract_audio_from_file(file_path: str, output_path: str) -> tuple[str, dict]:
+    """Extract audio from a local file using ffmpeg (without conversion)."""
+    input_path = Path(file_path)
+    ext = input_path.suffix.lower()
+    
+    file_id = hashlib.md5(str(input_path.resolve()).encode()).hexdigest()[:12]
+    
+    if ext in AUDIO_EXTENSIONS:
+        output_ext = ext
+    else:
+        output_ext = '.m4a'
+    
+    audio_file = os.path.join(output_path, f"{file_id}{output_ext}")
+    
+    cmd = [
+        'ffmpeg',
+        '-y',
+        '-i', str(input_path.resolve()),
+        '-vn',
+        '-c:a', 'copy',
+        audio_file
+    ]
+    
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg failed: {result.stderr}")
+    
+    if not os.path.exists(audio_file):
+        raise RuntimeError(f"Audio file was not created: {result.stderr}")
+    
+    duration_cmd = [
+        'ffprobe',
+        '-v', 'error',
+        '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1',
+        str(input_path.resolve())
+    ]
+    duration_result = subprocess.run(duration_cmd, capture_output=True, text=True)
+    duration = 0
+    if duration_result.returncode == 0 and duration_result.stdout.strip():
+        try:
+            duration = int(float(duration_result.stdout.strip()))
+        except ValueError:
+            pass
+    
+    metadata = {
+        'id': file_id,
+        'title': input_path.stem,
+        'channel': 'local',
+        'upload_date': '',
+        'description': '',
+        'duration': duration,
+        'view_count': 0,
+        'like_count': 0,
+        'categories': [],
+        'tags': [],
+    }
+    
+    return audio_file, metadata
 
 
 def get_video_metadata(url: str) -> dict:

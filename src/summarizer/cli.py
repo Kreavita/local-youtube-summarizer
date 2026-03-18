@@ -6,6 +6,8 @@ import webbrowser
 import threading
 import time
 import subprocess
+import hashlib
+from pathlib import Path
 
 from . import downloader, transcriber, summarizer
 from .config import SUMMARY_PROMPT, WHISPER_MODEL, OLLAMA_MODEL
@@ -23,7 +25,7 @@ def open_browser():
 
 def main():
     parser = argparse.ArgumentParser(description="Summarize YouTube videos using Whisper and Ollama")
-    parser.add_argument("url", help="YouTube video URL", nargs="?")
+    parser.add_argument("url", help="YouTube video URL or local file path", nargs="?")
     parser.add_argument("--prompt", "-p", default=SUMMARY_PROMPT, help="Summary prompt")
     parser.add_argument("--model", "-m", default=OLLAMA_MODEL, help="Ollama model")
     parser.add_argument("--whisper-model", default=WHISPER_MODEL, help="Whisper model size (tiny, base, small, medium, large-v3-turbo, large-v3, turbo)")
@@ -45,28 +47,41 @@ def main():
         sys.exit(0)
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        metadata = downloader.get_video_metadata(args.url)
+        is_local = downloader.is_local_path(args.url)
         
+        audio_path = None
+        metadata: dict = {}
         transcript = None
-        if not args.no_cache:
-            transcript = transcriber.load_cached_transcript(metadata['id'])
-                    
-        if transcript:
-            print(f"Using cached transcript. (length: {len(transcript)})")
+        
+        if is_local:
+            metadata = downloader.get_file_metadata(args.url)
         else:
-            print("Downloading audio...")
-            audio_path, metadata = downloader.download_audio(args.url, temp_dir)
-            print(f"{GREEN}Audio downloaded: {audio_path}{RESET}")
-            print(f"{GREEN}Video: {metadata.get('title', 'N/A')} by {metadata.get('channel', 'N/A')}{RESET}")
+            metadata = downloader.get_video_metadata(args.url)
+            
+        file_id = metadata['id']
+            
+        if not args.no_cache:
+            transcript = transcriber.load_cached_transcript(file_id)
+            if transcript:
+                print(f"Using cached transcript. (length: {len(transcript)})")
+        
+        if not transcript:
+            if is_local:
+                print("Extracting audio from local file...")
+                audio_path, metadata = downloader.extract_audio_from_file(args.url, temp_dir)
+                print(f"{GREEN}File: {metadata.get('title', 'N/A')}{RESET}")
+            else:
+                print("Downloading audio...")
+                audio_path, metadata = downloader.download_audio(args.url, temp_dir)
+                print(f"{GREEN}Video: {metadata.get('title', 'N/A')} by {metadata.get('channel', 'N/A')}{RESET}")
+            print(f"{GREEN}Audio extracted: {audio_path}{RESET}")
 
+        if not transcript and audio_path:
             print("Transcribing with Whisper...")
             transcript = transcriber.transcribe_audio(audio_path, args.whisper_model)
             
-            if not args.no_cache:
-                transcriber.save_transcript(metadata['id'], transcript)
-                print(f"{GREEN}Transcription complete and cached.{RESET}")
-            else:
-                print(f"{GREEN}Transcription complete.{RESET}")
+            transcriber.save_transcript(file_id, transcript)
+            print(f"{GREEN}Transcription complete and cached.{RESET}")
 
             if not args.keep_audio:
                 os.remove(audio_path)
@@ -74,6 +89,7 @@ def main():
 
         print("Generating summary with Ollama...")
         try:
+            assert transcript is not None
             summary = summarizer.summarize_text(transcript, args.prompt, args.model, metadata)
         except Exception as e:
             print(f"{RED}Error: {str(e)}{RESET}")
