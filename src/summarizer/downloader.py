@@ -7,7 +7,7 @@ import datetime
 from pathlib import Path
 from typing import Generator
 
-AUDIO_EXTENSIONS = {'.mp3', '.m4a', '.wav', '.ogg', '.flac', '.aac', '.wma', '.aiff'}
+AUDIO_EXTENSIONS = {'.mp3', '.m4a', '.wav', '.ogg', '.flac', '.aac', '.wma', '.aiff', '.opus'}
 VIDEO_EXTENSIONS = {'.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg'}
 
 
